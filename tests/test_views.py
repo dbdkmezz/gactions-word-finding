@@ -9,5 +9,5 @@ from apps.word_finding.views import index
 class TestViews(TestCase):
     def test_hello_world_if_not_json(self):
         result = index(MockRequest(body='NOT JSON'))
-        self.assertIs(type(result), HttpResponse)
+        self.assertIsInstance(result, HttpResponse)
         self.assertIn("Hello world", str(result.content))
