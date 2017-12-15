@@ -1,6 +1,6 @@
 from django.db import models
 
-# from .clue import PhoneticClue
+# from .cue import PhoneticCue
 
 
 class Excercise(models.Model):
@@ -15,5 +15,5 @@ class Question(models.Model):
     class Meta:
         unique_together = (('excercise', 'question'),)
 
-    # def clues(self):
-    #     return PhoneticClue.objects.filter(question__id=self.id)
+    # def cues(self):
+    #     return PhoneticCue.objects.filter(question__id=self.id)

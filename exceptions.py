@@ -1,0 +1,2 @@
+class NoExcerciseInProgress(Exception):
+    pass
