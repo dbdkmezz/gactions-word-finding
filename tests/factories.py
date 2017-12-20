@@ -1,12 +1,12 @@
 from factory import DjangoModelFactory, SubFactory, fuzzy
 
-from apps.word_finding.models.user import User, ExcerciseState, AnswerGiven
-from apps.word_finding.models.excercise import Excercise, Question
+from apps.word_finding.models.user import User, ExerciseState, AnswerGiven
+from apps.word_finding.models.exercise import Exercise, Question
 
 
-class ExcerciseFactory(DjangoModelFactory):
+class ExerciseFactory(DjangoModelFactory):
     class Meta:
-        model = Excercise
+        model = Exercise
 
     name = fuzzy.FuzzyText(length=32)
 
@@ -15,7 +15,7 @@ class QuestionFactory(DjangoModelFactory):
     class Meta:
         model = Question
 
-    excercise = SubFactory(ExcerciseFactory)
+    exercise = SubFactory(ExerciseFactory)
     question = fuzzy.FuzzyText(length=128)
     answer = fuzzy.FuzzyText(length=32)
 
@@ -27,12 +27,12 @@ class UserFactory(DjangoModelFactory):
     user_id = fuzzy.FuzzyText(length=100)
 
 
-class ExcerciseStateFactory(DjangoModelFactory):
+class ExerciseStateFactory(DjangoModelFactory):
     class Meta:
-        model = ExcerciseState
+        model = ExerciseState
 
     user = SubFactory(UserFactory)
-    excercise = SubFactory(ExcerciseFactory)
+    exercise = SubFactory(ExerciseFactory)
     current_question = SubFactory(QuestionFactory)
     completed = fuzzy.FuzzyChoice((True, False))
 
@@ -41,6 +41,6 @@ class AnswerGivenFactory(DjangoModelFactory):
     class Meta:
         model = AnswerGiven
 
-    excercise_state = SubFactory(ExcerciseStateFactory)
+    exercise_state = SubFactory(ExerciseStateFactory)
     question = SubFactory(QuestionFactory)
     answer = fuzzy.FuzzyText(length=32)

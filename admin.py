@@ -1,11 +1,16 @@
 from django.contrib import admin
 
-from .models.excercise import Excercise, Question
-from .models.user import User, ExcerciseState, AnswerGiven
+from .models.exercise import Exercise, Question
+from .models.user import User, ExerciseState, AnswerGiven
 
 
-admin.site.register(Excercise)
-admin.site.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = [f.name for f in Question._meta.fields]
+    # fields = ['username', 'service', 'account_type', 'valid']
+
+
+admin.site.register(Exercise)
+admin.site.register(Question, QuestionAdmin)
 admin.site.register(User)
-admin.site.register(ExcerciseState)
+admin.site.register(ExerciseState)
 admin.site.register(AnswerGiven)

@@ -1,2 +1,2 @@
-class NoExcerciseInProgress(Exception):
+class NoExerciseInProgress(Exception):
     pass
