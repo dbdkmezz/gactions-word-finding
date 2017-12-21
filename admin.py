@@ -6,6 +6,7 @@ from .models.user import User, ExerciseState, AnswerGiven
 
 class QuestionAdmin(admin.ModelAdmin):
     list_display = [f.name for f in Question._meta.fields]
+    list_filter = ('exercise', )
 
 
 class ExerciseAdmin(admin.ModelAdmin):
@@ -14,6 +15,7 @@ class ExerciseAdmin(admin.ModelAdmin):
 
 class ExerciseStateAdmin(admin.ModelAdmin):
     list_display = [f.name for f in ExerciseState._meta.fields]
+    list_filter = ('user', 'exercise')
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -21,6 +23,11 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class AnswerGivenAdmin(admin.ModelAdmin):
+    list_filter = ('exercise', )
+
+    def exercise(self, obj):
+        return obj.question.exercise
+
     @property
     def list_display(self):
         fields = [f.name for f in AnswerGiven._meta.fields]
