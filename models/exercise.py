@@ -5,9 +5,13 @@ from django.db import models
 
 class Exercise(models.Model):
     name = models.CharField(max_length=32, unique=True)
+    enabled = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.name
+        result = self.name
+        if not self.enabled:
+            result += ' (DISABLED)'
+        return result
 
 
 class Question(models.Model):

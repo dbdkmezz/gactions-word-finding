@@ -34,7 +34,6 @@ class ExerciseStateFactory(DjangoModelFactory):
     user = SubFactory(UserFactory)
     exercise = SubFactory(ExerciseFactory)
     current_question = SubFactory(QuestionFactory)
-    completed = fuzzy.FuzzyChoice((True, False))
 
 
 class AnswerGivenFactory(DjangoModelFactory):

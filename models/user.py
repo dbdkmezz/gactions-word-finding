@@ -1,6 +1,8 @@
 from django.db import models
 
-from apps.word_finding.exceptions import NoExerciseInProgress
+from apps.word_finding.exceptions import (
+    NoExerciseInProgress, NoQuestionsRemaining, NoExercisesAvailable,
+)
 
 from .exercise import Exercise, Question
 
@@ -11,13 +13,20 @@ class User(models.Model):
     def __str__(self):
         return self.user_id
 
+    def get_current_exercise_state(self):
+        try:
+            return ExerciseState.objects.get(user=self, completed=False)
+        except ExerciseState.DoesNotExist:
+            raise NoExerciseInProgress
+
     def start_new_exercise(self):
         if ExerciseState.objects.filter(user=self, completed=False).exists():
-            # exercise still in progress
-            raise Exception
+            raise Exception("Can't start new exercise, exercise in progress.")
 
         exercises_completed = ExerciseState.objects.filter(user=self)
-        new_exercises = Exercise.objects.exclude(pk__in=exercises_completed)
+        new_exercises = Exercise.objects.exclude(pk__in=exercises_completed).exclude(enabled=False)
+        if not new_exercises:
+            raise NoExercisesAvailable
         exercise = new_exercises.first()  # todo: make it random
         ExerciseState.objects.create(
             user=self,
@@ -26,12 +35,9 @@ class User(models.Model):
         return exercise
 
     def check_answer(self, answer):
-        state = ExerciseState.objects.get(
-            user=self,
-            completed=False,
-        )
+        state = self.get_current_exercise_state()
         if state.current_question is None:
-            raise Exception
+            raise Exception("Can't check answer, there is no current question.")
         answer_given = AnswerGiven.objects.create(
             exercise_state=state,
             question=state.current_question,
@@ -43,18 +49,36 @@ class User(models.Model):
             state.save()
         return correct
 
+    def retry_question(self):
+        state = self.get_current_exercise_state()
+        return state.current_question.question
+
     def get_next_question(self):
-        try:
-            state = ExerciseState.objects.get(user=self, completed=False)
-        except ExerciseState.DoesNotExist:
-            raise NoExerciseInProgress
-        if state.current_question is not None:
-            raise Exception
+        state = self.get_current_exercise_state()
+        if state.current_question:
+            raise Exception("Can't get next question, there already is a current question.")
+
         previous_answers = AnswerGiven.objects.filter(exercise_state=state)
-        remaining_questions = Question.objects.filter(
+        questions_answered = (a.question.pk for a in previous_answers)
+        question = Question.objects.filter(
             exercise=state.exercise
-        ).exclude(pk__in=previous_answers)
-        return remaining_questions.first().question
+        ).exclude(
+            pk__in=questions_answered
+        ).first()
+
+        if not question:
+            raise NoQuestionsRemaining
+
+        state.current_question = question
+        state.save()
+        return question.question
+
+    def complete_exercise(self):
+        num_updated = (
+            ExerciseState.objects.filter(user=self, completed=False).update(completed=True))
+        if num_updated != 1:
+            raise Exception(
+                "There were multiple exercises not completed for user {}".format(self))
 
 
 class ExerciseState(models.Model):
@@ -78,7 +102,7 @@ class AnswerGiven(models.Model):
         # Would be more efficient if answers were objects, then we wouldn't have to do a
         # string comparison here.
         # Alternatively, this bool could be part of the model, but that doesn't feel right.
-        return Question.objects.get(pk=self.question.pk).answer == self.answer
+        return Question.objects.get(pk=self.question.pk).answer.lower() == self.answer.lower()
 
 
 # class CueGiven(models.Model):
