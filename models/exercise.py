@@ -49,5 +49,13 @@ class Question(models.Model):
     def answers(self):
         return self.answer.split(', ')
 
+    def model_answer(self, answer=None):
+        if not answer:
+            answer = self.answers[0]
+        response = self.response if self.response else self.question
+        if 'ANSWER' in response:
+            return response.replace('ANSWER', answer)
+        return '{} {}'.format(response, answer)
+
     # def cues(self):
     #     return PhoneticCue.objects.filter(question__id=self.id)

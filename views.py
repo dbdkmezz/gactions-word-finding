@@ -13,13 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 # v1
-# questions can have BLANK in them to indicate where the answer goes
+# ask if they want to try a question again?
+# what happens if the user says nothing
 #
 # v2
+# add last_modified and date_created to appropriate models
 # response better if don't understand response to do another exercise
 # let the user choose the exercise
 # max retries for questions
-# ask if they want to try a question again?
 # random question order
 # optional question order
 
@@ -47,16 +48,17 @@ def index(request):
             responses.append("Alright, let's go!")
         else:
             return JsonResponse(AppResponse().tell('Goodbye'))
+    elif not user.exercise_in_progress:
+        user.start_new_exercise()
+        responses.append("Welcome back. Let's start a new exercise.")
     else:
         correct = user.check_answer(google_request.text)
         if correct:
-            responses.append(random.choice(("That's right", "Correct")))
-            # mirror the correct answer
-            responses.append(user.get_current_question())
-            responses.append(google_request.text)
+            responses.append(random.choice(("That's right,", "Correct,")))
+            responses.append(user.get_model_answer(google_request.text))
             user.reset_current_question()
         else:
-            responses.append("I'm sorry, that's incorrect.")
+            responses.append("I'm sorry, {} is incorrect.".format(google_request.text))
             responses.append("Please try again.")
             responses.append(user.retry_question())
             retry_question = True

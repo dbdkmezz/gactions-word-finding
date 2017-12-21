@@ -49,7 +49,7 @@ class TestViews(TestCase):
         response = index(MockRequest(text='right answer', user_id='user'))
         response_text = GoogleTestUtils.get_text_from_google_response(response)
 
-        self.assertTrue(any(r in response_text for r in ("That's right ", "Correct ")))
+        self.assertTrue(any(r in response_text for r in ("That's right, ", "Correct, ")))
         self.assertIn('the question', response_text)
         self.assertIn('right answer', response_text)
 

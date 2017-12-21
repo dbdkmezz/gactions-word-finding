@@ -21,7 +21,15 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class AnswerGivenAdmin(admin.ModelAdmin):
-    list_display = [f.name for f in AnswerGiven._meta.fields]
+    @property
+    def list_display(self):
+        fields = [f.name for f in AnswerGiven._meta.fields]
+        fields.append('correct')
+        return fields
+
+    def correct(self, obj):
+        return obj.correct()
+    correct.boolean = True
 
 
 admin.site.register(Exercise, ExerciseAdmin)

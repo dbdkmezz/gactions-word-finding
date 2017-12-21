@@ -13,17 +13,21 @@ class User(models.Model):
     def __str__(self):
         return self.user_id
 
-    def filter_current_exercise_state(self):
+    def _filter_current_exercise_state(self):
         return ExerciseState.objects.filter(user=self, completed=False)
 
-    def get_current_exercise_state(self):
+    def _get_current_exercise_state(self):
         try:
-            return self.filter_current_exercise_state().get()
+            return self._filter_current_exercise_state().get()
         except ExerciseState.DoesNotExist:
             raise NoExerciseInProgress
 
+    @property
+    def exercise_in_progress(self):
+        return self._filter_current_exercise_state().exists()
+
     def start_new_exercise(self):
-        if self.filter_current_exercise_state().exists():
+        if self.exercise_in_progress:
             raise Exception("Can't start new exercise, exercise in progress.")
 
         exercises = Exercise.objects.exclude(enabled=False)
@@ -44,7 +48,7 @@ class User(models.Model):
         return exercise
 
     def check_answer(self, answer):
-        state = self.get_current_exercise_state()
+        state = self._get_current_exercise_state()
         if state.current_question is None:
             raise Exception("Can't check answer, there is no current question.")
         answer_given = AnswerGiven.objects.create(
@@ -55,17 +59,20 @@ class User(models.Model):
         return answer_given.correct()
 
     def retry_question(self):
-        state = self.get_current_exercise_state()
+        state = self._get_current_exercise_state()
         return state.current_question.question
 
     def get_current_question(self):
-        return self.get_current_exercise_state().current_question.question
+        return self._get_current_exercise_state().current_question.question
 
     def reset_current_question(self):
-        self.filter_current_exercise_state().update(current_question=None)
+        self._filter_current_exercise_state().update(current_question=None)
+
+    def get_model_answer(self, answer=None):
+        return self._get_current_exercise_state().current_question.model_answer(answer)
 
     def get_next_question(self):
-        state = self.get_current_exercise_state()
+        state = self._get_current_exercise_state()
         if state.current_question:
             raise Exception("Can't get next question, there already is a current question.")
 
@@ -85,7 +92,7 @@ class User(models.Model):
         return question.question
 
     def complete_exercise(self):
-        num_updated = self.filter_current_exercise_state().update(completed=True)
+        num_updated = self._filter_current_exercise_state().update(completed=True)
         if num_updated != 1:
             raise Exception(
                 "There were multiple exercises not completed for user {}".format(self))
@@ -101,6 +108,12 @@ class ExerciseState(models.Model):
     exercise = models.ForeignKey('Exercise', on_delete=models.CASCADE)
     current_question = models.ForeignKey('Question', on_delete=models.CASCADE, null=True)
     completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        result = "{}: {}".format(self.user, self.exercise)
+        if self.completed:
+            result += " (COMPLETED)"
+        return result
 
 
 class AnswerGiven(models.Model):

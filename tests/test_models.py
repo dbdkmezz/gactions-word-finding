@@ -28,6 +28,18 @@ class TestQuestionModel(TestCase):
         question = QuestionFactory(answer='UpperCase')
         self.assertEqual(question.answer, 'uppercase')
 
+    def test_model_answer_appends_answer(self):
+        question = QuestionFactory(response='The colour of a pea is', answer='green')
+        self.assertEqual(question.model_answer(), 'The colour of a pea is green')
+
+    def test_model_answer_appends_provided_answer(self):
+        question = QuestionFactory(response='The colour of a pea is')
+        self.assertEqual(question.model_answer('green'), 'The colour of a pea is green')
+
+    def test_model_answer_replaces_answer(self):
+        question = QuestionFactory(response='A ANSWER can be used to drive around', answer='car')
+        self.assertEqual(question.model_answer(), 'A car can be used to drive around')
+
 
 @pytest.mark.django_db
 class TestAnswerGivenModel(TestCase):
