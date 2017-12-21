@@ -13,10 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 # v1
-# allow the user to redo exercises if they are all done
-# soon questions will have multiple answers (comma separated)
 # questions can have BLANK in them to indicate where the answer goes
-# model correct answer when right or giving up on a question, with BLANK
 #
 # v2
 # response better if don't understand response to do another exercise
@@ -53,7 +50,11 @@ def index(request):
     else:
         correct = user.check_answer(google_request.text)
         if correct:
-            responses.append(random.choice(("That's right!", "Correct!")))
+            responses.append(random.choice(("That's right", "Correct")))
+            # mirror the correct answer
+            responses.append(user.get_current_question())
+            responses.append(google_request.text)
+            user.reset_current_question()
         else:
             responses.append("I'm sorry, that's incorrect.")
             responses.append("Please try again.")

@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 
 # from .cue import PhoneticCue
@@ -25,6 +27,27 @@ class Question(models.Model):
 
     def __str__(self):
         return self.question
+
+    def save(self, *args, **kwargs):
+        self.answer = self.answer.lower()
+
+        if re.search(r'[^a-z, ]', self.answer):
+            print(self.answer)
+            raise Exception('Answers must not include any special characters')
+
+        if re.search(r',[^ ]', self.answer):
+            raise Exception((
+                'To include multiple correct answers ensure that the answers are sparated by '
+                'commas, with a space after each comma.'))
+
+        if '  ' in self.answer:
+            raise Exception('Answers must not contain more than one consequtive space.')
+
+        super(Question, self).save(*args, **kwargs)
+
+    @property
+    def answers(self):
+        return self.answer.split(', ')
 
     # def cues(self):
     #     return PhoneticCue.objects.filter(question__id=self.id)

@@ -2,6 +2,7 @@ import pytest
 
 from django.test import TestCase
 
+from apps.word_finding.models.exercise import Question
 from apps.word_finding.models.user import ExerciseState
 from apps.word_finding.exceptions import (
     NoExerciseInProgress, NoExercisesAvailable, NoQuestionsRemaining,
@@ -9,6 +10,23 @@ from apps.word_finding.exceptions import (
 from .factories import (
     UserFactory, AnswerGivenFactory, QuestionFactory, ExerciseFactory, ExerciseStateFactory,
 )
+
+
+@pytest.mark.django_db
+class TestQuestionModel(TestCase):
+    def test_answer_validation(self):
+        self.assertIsInstance(QuestionFactory(answer='oneword'), Question)
+        self.assertIsInstance(QuestionFactory(answer='with, space'), Question)
+        with self.assertRaises(Exception):
+            QuestionFactory(answer='missing,space')
+        with self.assertRaises(Exception):
+            QuestionFactory(answer='special-chararcter')
+        with self.assertRaises(Exception):
+            QuestionFactory(answer='double  space')
+
+    def test_lowercases_answer(self):
+        question = QuestionFactory(answer='UpperCase')
+        self.assertEqual(question.answer, 'uppercase')
 
 
 @pytest.mark.django_db
@@ -20,6 +38,12 @@ class TestAnswerGivenModel(TestCase):
 
         correct_answer = AnswerGivenFactory(question=question, answer='correct answer')
         self.assertTrue(correct_answer.correct())
+
+    def test_correct_multiple_answers(self):
+        question = QuestionFactory(answer='good, correct')
+        self.assertTrue(AnswerGivenFactory(question=question, answer='good').correct())
+        self.assertTrue(AnswerGivenFactory(question=question, answer='correct').correct())
+        self.assertFalse(AnswerGivenFactory(question=question, answer='good, correct').correct())
 
 
 @pytest.mark.django_db

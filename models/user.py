@@ -13,21 +13,30 @@ class User(models.Model):
     def __str__(self):
         return self.user_id
 
+    def filter_current_exercise_state(self):
+        return ExerciseState.objects.filter(user=self, completed=False)
+
     def get_current_exercise_state(self):
         try:
-            return ExerciseState.objects.get(user=self, completed=False)
+            return self.filter_current_exercise_state().get()
         except ExerciseState.DoesNotExist:
             raise NoExerciseInProgress
 
     def start_new_exercise(self):
-        if ExerciseState.objects.filter(user=self, completed=False).exists():
+        if self.filter_current_exercise_state().exists():
             raise Exception("Can't start new exercise, exercise in progress.")
 
-        exercises_completed = ExerciseState.objects.filter(user=self)
-        new_exercises = Exercise.objects.exclude(pk__in=exercises_completed).exclude(enabled=False)
-        if not new_exercises:
+        exercises = Exercise.objects.exclude(enabled=False)
+        if not exercises:
             raise NoExercisesAvailable
-        exercise = new_exercises.first()  # todo: make it random
+
+        exercises_completed = ExerciseState.objects.filter(user=self)
+        new_exercises = exercises.exclude(pk__in=exercises_completed)
+        if new_exercises:
+            exercise = new_exercises.first()  # todo: make it random
+        else:  # they've already done them all once
+            exercise = exercises.first()  # todo: make it random
+
         ExerciseState.objects.create(
             user=self,
             exercise=exercise,
@@ -43,15 +52,17 @@ class User(models.Model):
             question=state.current_question,
             answer=answer,
         )
-        correct = answer_given.correct()
-        if correct:
-            state.current_question = None
-            state.save()
-        return correct
+        return answer_given.correct()
 
     def retry_question(self):
         state = self.get_current_exercise_state()
         return state.current_question.question
+
+    def get_current_question(self):
+        return self.get_current_exercise_state().current_question.question
+
+    def reset_current_question(self):
+        self.filter_current_exercise_state().update(current_question=None)
 
     def get_next_question(self):
         state = self.get_current_exercise_state()
@@ -74,8 +85,7 @@ class User(models.Model):
         return question.question
 
     def complete_exercise(self):
-        num_updated = (
-            ExerciseState.objects.filter(user=self, completed=False).update(completed=True))
+        num_updated = self.filter_current_exercise_state().update(completed=True)
         if num_updated != 1:
             raise Exception(
                 "There were multiple exercises not completed for user {}".format(self))
@@ -102,7 +112,9 @@ class AnswerGiven(models.Model):
         # Would be more efficient if answers were objects, then we wouldn't have to do a
         # string comparison here.
         # Alternatively, this bool could be part of the model, but that doesn't feel right.
-        return Question.objects.get(pk=self.question.pk).answer.lower() == self.answer.lower()
+        return (
+            self.answer.lower()
+            in (a.lower() for a in Question.objects.get(pk=self.question.pk).answers))
 
 
 # class CueGiven(models.Model):

@@ -37,7 +37,8 @@ class TestViews(TestCase):
     def test_correct_answer(self):
         user = UserFactory(user_id='user')
         exercise = ExerciseFactory()
-        question = QuestionFactory(exercise=exercise, answer='right answer')
+        question = QuestionFactory(
+            exercise=exercise, answer='right answer', question='the question')
         ExerciseStateFactory(
             user=user,
             exercise=exercise,
@@ -48,7 +49,9 @@ class TestViews(TestCase):
         response = index(MockRequest(text='right answer', user_id='user'))
         response_text = GoogleTestUtils.get_text_from_google_response(response)
 
-        self.assertTrue(any(r in response_text for r in ("That's right! ", "Correct! ")))
+        self.assertTrue(any(r in response_text for r in ("That's right ", "Correct ")))
+        self.assertIn('the question', response_text)
+        self.assertIn('right answer', response_text)
 
     def test_incorrect_answer(self):
         user = UserFactory(user_id='user')
