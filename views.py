@@ -13,16 +13,18 @@ logger = logging.getLogger(__name__)
 
 
 # v1
-# ask if they want to try a question again?
+# max incorrect answers
 # what happens if the user says nothing
 #
 # v2
+# ask if they want to try a question again?
 # add last_modified and date_created to appropriate models
 # response better if don't understand response to do another exercise
 # let the user choose the exercise
 # max retries for questions
 # random question order
 # optional question order
+# add emphasis to BLANK in questions -- https://developers.google.com/actions/reference/ssml
 
 
 TOKEN_DO_ANOTHER_EXERCISE = 'DO_ANOTHER_EXERCISE'
@@ -55,7 +57,7 @@ def index(request):
         correct = user.check_answer(google_request.text)
         if correct:
             responses.append(random.choice(("That's right,", "Correct,")))
-            responses.append(user.get_model_answer(google_request.text))
+            responses.append('{}.'.format(user.get_model_answer(google_request.text)))
             user.reset_current_question()
         else:
             responses.append("I'm sorry, {} is incorrect.".format(google_request.text))

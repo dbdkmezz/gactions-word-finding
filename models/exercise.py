@@ -18,7 +18,7 @@ class Exercise(models.Model):
 
 class Question(models.Model):
     exercise = models.ForeignKey('Exercise', on_delete=models.CASCADE)
-    question = models.TextField(unique=True)
+    question = models.TextField()
     response = models.TextField(default='', blank=True)
     answer = models.TextField()
 
@@ -53,8 +53,8 @@ class Question(models.Model):
         if not answer:
             answer = self.answers[0]
         response = self.response if self.response else self.question
-        if 'ANSWER' in response:
-            return response.replace('ANSWER', answer)
+        if 'BLANK' in response:
+            return response.replace('BLANK', answer)
         return '{} {}'.format(response, answer)
 
     # def cues(self):

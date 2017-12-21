@@ -37,7 +37,7 @@ class TestQuestionModel(TestCase):
         self.assertEqual(question.model_answer('green'), 'The colour of a pea is green')
 
     def test_model_answer_replaces_answer(self):
-        question = QuestionFactory(response='A ANSWER can be used to drive around', answer='car')
+        question = QuestionFactory(response='A BLANK can be used to drive around', answer='car')
         self.assertEqual(question.model_answer(), 'A car can be used to drive around')
 
 
