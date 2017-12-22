@@ -17,6 +17,7 @@ class QuestionFactory(DjangoModelFactory):
 
     exercise = SubFactory(ExerciseFactory)
     question = fuzzy.FuzzyText(length=128)
+    response = fuzzy.FuzzyText(length=128)
     answer = fuzzy.FuzzyText(length=32)
 
 

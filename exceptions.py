@@ -10,3 +10,7 @@ class NoQuestionsRemaining(Exception):
 class NoExercisesAvailable(Exception):
     "There are no exercises available which have not been disbaled."
     pass
+
+
+class MaxQuestionRetriesReached(Exception):
+    pass

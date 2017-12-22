@@ -23,16 +23,15 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class AnswerGivenAdmin(admin.ModelAdmin):
-    list_filter = ('exercise', )
-
-    def exercise(self, obj):
-        return obj.question.exercise
-
     @property
     def list_display(self):
         fields = [f.name for f in AnswerGiven._meta.fields]
         fields.append('correct')
+        fields.append('exercise')
         return fields
+
+    def exercise(self, obj):
+        return obj.question.exercise
 
     def correct(self, obj):
         return obj.correct()

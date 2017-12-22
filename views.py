@@ -5,7 +5,7 @@ from django.http import HttpResponse, JsonResponse
 
 from libs.google_actions import AppResponse, AppRequest, NoJsonException
 
-from .exceptions import NoQuestionsRemaining
+from .exceptions import NoQuestionsRemaining, MaxQuestionRetriesReached
 from .models.user import User
 
 
@@ -13,18 +13,16 @@ logger = logging.getLogger(__name__)
 
 
 # v1
-# max incorrect answers
 # what happens if the user says nothing
 #
 # v2
+# add emphasis to BLANK in questions -- https://developers.google.com/actions/reference/ssml
+# random question order
 # ask if they want to try a question again?
 # add last_modified and date_created to appropriate models
 # response better if don't understand response to do another exercise
 # let the user choose the exercise
-# max retries for questions
-# random question order
 # optional question order
-# add emphasis to BLANK in questions -- https://developers.google.com/actions/reference/ssml
 
 
 TOKEN_DO_ANOTHER_EXERCISE = 'DO_ANOTHER_EXERCISE'
@@ -39,11 +37,13 @@ def index(request):
     responses = []
     retry_question = False
     conversation_token = None
+    first_question = False
 
     user, created = User.objects.get_or_create(user_id=google_request.user_id)
 
     if created:
         responses = _welcome(user, responses)
+        first_question = True
     elif google_request.conversation_token == TOKEN_DO_ANOTHER_EXERCISE:
         if any(google_request.text in r for r in ('yes', 'ok')):
             user.start_new_exercise()
@@ -53,6 +53,7 @@ def index(request):
     elif not user.exercise_in_progress:
         user.start_new_exercise()
         responses.append("Welcome back. Let's start a new exercise.")
+        first_question = True
     else:
         correct = user.check_answer(google_request.text)
         if correct:
@@ -61,12 +62,23 @@ def index(request):
             user.reset_current_question()
         else:
             responses.append("I'm sorry, {} is incorrect.".format(google_request.text))
-            responses.append("Please try again.")
-            responses.append(user.retry_question())
-            retry_question = True
+            try:
+                question = user.retry_question()
+            except MaxQuestionRetriesReached:
+                responses.append('{}.'.format(user.get_model_answer(google_request.text)))
+                user.reset_current_question()
+                responses.append("Let's move on.")
+            else:
+                responses.append("Please try again.")
+                responses.append(question)
+                retry_question = True
 
     if not retry_question:
-        responses, conversation_token = _get_next_question(user, responses, created)
+        responses, conversation_token = _get_next_question(
+            user=user,
+            responses=responses,
+            first_question=first_question,
+        )
 
     return JsonResponse(AppResponse().ask(
         ' '.join(responses),

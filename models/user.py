@@ -1,7 +1,7 @@
 from django.db import models
 
 from apps.word_finding.exceptions import (
-    NoExerciseInProgress, NoQuestionsRemaining, NoExercisesAvailable,
+    NoExerciseInProgress, NoQuestionsRemaining, NoExercisesAvailable, MaxQuestionRetriesReached,
 )
 
 from .exercise import Exercise, Question
@@ -58,8 +58,10 @@ class User(models.Model):
         )
         return answer_given.correct()
 
-    def retry_question(self):
+    def retry_question(self, max_attempts=3):
         state = self._get_current_exercise_state()
+        if state.attempts_at_current_question() >= max_attempts:
+            raise MaxQuestionRetriesReached
         return state.current_question.question
 
     def get_current_question(self):
@@ -114,6 +116,12 @@ class ExerciseState(models.Model):
         if self.completed:
             result += " (COMPLETED)"
         return result
+
+    def attempts_at_current_question(self):
+        return AnswerGiven.objects.filter(
+            exercise_state=self,
+            question=self.current_question,
+        ).count()
 
 
 class AnswerGiven(models.Model):

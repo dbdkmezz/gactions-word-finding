@@ -5,7 +5,7 @@ from django.test import TestCase
 from apps.word_finding.models.exercise import Question
 from apps.word_finding.models.user import ExerciseState
 from apps.word_finding.exceptions import (
-    NoExerciseInProgress, NoExercisesAvailable, NoQuestionsRemaining,
+    NoExerciseInProgress, NoExercisesAvailable, NoQuestionsRemaining, MaxQuestionRetriesReached,
 )
 from .factories import (
     UserFactory, AnswerGivenFactory, QuestionFactory, ExerciseFactory, ExerciseStateFactory,
@@ -101,6 +101,20 @@ class TestUserModel(TestCase):
         AnswerGivenFactory(exercise_state=exercise_state, question=completed_question)
         result = user.get_next_question()
         self.assertEqual(result, remaining_question.question)
+
+    def test_retry_question_raises_if_max_attempts_reached(self):
+        user = UserFactory()
+        exercise = ExerciseFactory()
+        QuestionFactory(exercise=exercise)
+
+        user.start_new_exercise()
+        user.get_next_question()
+        user.check_answer('')
+        user.retry_question(max_attempts=2)
+        user.check_answer('')
+
+        with self.assertRaises(MaxQuestionRetriesReached):
+            user.retry_question(max_attempts=2)
 
     def test_check_answer_correct(self):
         user = UserFactory()
