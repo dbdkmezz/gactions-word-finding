@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 # random question order
 # optional question order
 # add emphasis to BLANK in questions -- https://developers.google.com/actions/reference/ssml
+# intro text for each exercise
 
 
 TOKEN_DO_ANOTHER_EXERCISE = 'DO_ANOTHER_EXERCISE'
@@ -75,7 +76,7 @@ def index(request):
 
 
 def _welcome(user, responses):
-    responses.append("Welcome to word finding practice.")
+    responses.append("Welcome. You have been having trouble finding your words. These exercises will give you a chance to practice your word finding")
     user.start_new_exercise()
     return responses
 
