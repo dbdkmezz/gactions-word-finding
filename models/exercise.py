@@ -32,7 +32,6 @@ class Question(models.Model):
         self.answer = self.answer.lower()
 
         if re.search(r'[^a-z, ]', self.answer):
-            print(self.answer)
             raise Exception('Answers must not include any special characters')
 
         if re.search(r',[^ ]', self.answer):
@@ -40,8 +39,8 @@ class Question(models.Model):
                 'To include multiple correct answers ensure that the answers are sparated by '
                 'commas, with a space after each comma.'))
 
-        if '  ' in self.answer:
-            raise Exception('Answers must not contain more than one consequtive space.')
+        if re.search(r'[^,]+ ', self.answer):
+            raise Exception('Answers must not contain spaces.')
 
         super(Question, self).save(*args, **kwargs)
 

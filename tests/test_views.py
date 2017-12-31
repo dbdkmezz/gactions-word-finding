@@ -39,7 +39,7 @@ class TestViews(TestCase):
         exercise = ExerciseFactory()
         question = QuestionFactory(
             exercise=exercise,
-            answer='right answer',
+            answer='rightanswer',
             question='the question',
             response='response',
         )
@@ -50,11 +50,11 @@ class TestViews(TestCase):
             completed=False,
         )
 
-        response = _make_request_and_return_text(text='right answer', user_id='user')
+        response = _make_request_and_return_text(text='rightanswer', user_id='user')
 
         self.assertTrue(any(r in response for r in ("That's right, ", "Correct, ")))
         self.assertIn('response', response)
-        self.assertIn('right answer', response)
+        self.assertIn('rightanswer', response)
 
     def test_incorrect_answer(self):
         user = UserFactory(user_id='user')
@@ -62,7 +62,7 @@ class TestViews(TestCase):
         question = QuestionFactory(
             question='Who am I?',
             exercise=exercise,
-            answer='right answer',
+            answer='right',
         )
         ExerciseStateFactory(
             user=user,
@@ -79,7 +79,7 @@ class TestViews(TestCase):
     def test_asks_next_question(self):
         user = UserFactory(user_id='user')
         exercise = ExerciseFactory()
-        question = QuestionFactory(exercise=exercise, answer='right answer')
+        question = QuestionFactory(exercise=exercise, answer='rightanswer')
         QuestionFactory(exercise=exercise, question='puzzling question')
         ExerciseStateFactory(
             user=user,
@@ -87,7 +87,7 @@ class TestViews(TestCase):
             current_question=question,
             completed=False,
         )
-        response = _make_request_and_return_text(text='right answer', user_id='user')
+        response = _make_request_and_return_text(text='rightanswer', user_id='user')
         self.assertIn("puzzling question", response)
 
     def test_returning_user(self):
@@ -123,11 +123,11 @@ class TestViews(TestCase):
         ExerciseStateFactory(
             user=UserFactory(user_id='user'),
             exercise=exercise,
-            current_question=QuestionFactory(exercise=exercise, answer='right answer'),
+            current_question=QuestionFactory(exercise=exercise, answer='right'),
             completed=False,
         )
 
-        response = index(MockRequest(text='right answer', user_id='user'))
+        response = index(MockRequest(text='right', user_id='user'))
         response_text = GoogleTestUtils.get_text_from_google_response(response)
 
         self.assertIn("finished", response_text)
@@ -169,8 +169,8 @@ class TestViews(TestCase):
 class IntegrationTests(TestCase):
     def test_basic_full_conversation(self):
         exercise = ExerciseFactory()
-        QuestionFactory(exercise=exercise, question='question one', answer='answer one')
-        QuestionFactory(exercise=exercise, question='question two', answer='answer two')
+        QuestionFactory(exercise=exercise, question='question one', answer='one')
+        QuestionFactory(exercise=exercise, question='question two', answer='two')
 
         # New user, starting the exercise and getting the first question
         response = _make_request_and_return_text(user_id='user')
@@ -187,13 +187,13 @@ class IntegrationTests(TestCase):
         self.assertIn('incorrect', response)
 
         # Get the answer right, will get the next question
-        answer = 'answer one' if first_question == 1 else 'answer two'
+        answer = 'one' if first_question == 1 else 'two'
         response = _make_request_and_return_text(user_id='user', text=answer)
         expected_question = 'question two' if first_question == 1 else 'question one'
         self.assertIn(expected_question, response)
 
         # Get the answer right, asks if we want to try another exercise
-        answer = 'answer one' if first_question == 2 else 'answer two'
+        answer = 'one' if first_question == 2 else 'two'
         raw_response = index(MockRequest(user_id='user', text=answer))
         response_text = GoogleTestUtils.get_text_from_google_response(raw_response)
         self.assertIn('Would you like to try another exercise', response_text)

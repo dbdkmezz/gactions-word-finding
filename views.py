@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 # what happens if the user says nothing
 #
 # v2
+# refactor index!
 # add emphasis to BLANK in questions -- https://developers.google.com/actions/reference/ssml
-# random question order
+# random and optional question order
 # ask if they want to try a question again?
 # add last_modified and date_created to appropriate models
 # response better if don't understand response to do another exercise
 # let the user choose the exercise
-# optional question order
 
 
 TOKEN_DO_ANOTHER_EXERCISE = 'DO_ANOTHER_EXERCISE'

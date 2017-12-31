@@ -22,7 +22,7 @@ class TestQuestionModel(TestCase):
         with self.assertRaises(Exception):
             QuestionFactory(answer='special-chararcter')
         with self.assertRaises(Exception):
-            QuestionFactory(answer='double  space')
+            QuestionFactory(answer='with space')
 
     def test_lowercases_answer(self):
         question = QuestionFactory(answer='UpperCase')
@@ -44,18 +44,37 @@ class TestQuestionModel(TestCase):
 @pytest.mark.django_db
 class TestAnswerGivenModel(TestCase):
     def test_correct(self):
-        question = QuestionFactory(answer='correct answer')
-        incorrect_answer = AnswerGivenFactory(question=question, answer='incorrect answer')
+        question = QuestionFactory(answer='correct')
+        incorrect_answer = AnswerGivenFactory(question=question, answer='wrong')
         self.assertFalse(incorrect_answer.correct())
 
-        correct_answer = AnswerGivenFactory(question=question, answer='correct answer')
+        correct_answer = AnswerGivenFactory(question=question, answer='correct')
         self.assertTrue(correct_answer.correct())
 
     def test_correct_multiple_answers(self):
         question = QuestionFactory(answer='good, correct')
         self.assertTrue(AnswerGivenFactory(question=question, answer='good').correct())
         self.assertTrue(AnswerGivenFactory(question=question, answer='correct').correct())
-        self.assertFalse(AnswerGivenFactory(question=question, answer='good, correct').correct())
+
+    def test_correct_extra_words(self):
+        self.assertTrue(AnswerGivenFactory(
+            question=QuestionFactory(answer='boot'),
+            answer='a boot'
+        ).correct())
+
+    def test_incorrect_small_sub_words(self):
+        "The letter 'a' is in the word 'cat', that shouldn't count as correcct"
+        self.assertFalse(AnswerGivenFactory(
+            question=QuestionFactory(answer='cat'),
+            answer='a dog'
+        ).correct())
+
+    @pytest.mark.skip("Not sure the best way to implement this")
+    def test_correct_extra_letters(self):
+        self.assertTrue(AnswerGivenFactory(
+            question=QuestionFactory(answer='boot'),
+            answer='boots'
+        ).correct())
 
 
 @pytest.mark.django_db
@@ -119,16 +138,16 @@ class TestUserModel(TestCase):
     def test_check_answer_correct(self):
         user = UserFactory()
         exercise = ExerciseFactory()
-        question = QuestionFactory(exercise=exercise, answer='correct answer')
+        question = QuestionFactory(exercise=exercise, answer='correct')
         ExerciseStateFactory(
             user=user, exercise=exercise, current_question=question, completed=False)
-        result = user.check_answer('correct answer')
+        result = user.check_answer('correct')
         self.assertTrue(result)
 
     def test_check_answer_incorrect(self):
         user = UserFactory()
         exercise = ExerciseFactory()
-        question = QuestionFactory(exercise=exercise, answer='correct answer')
+        question = QuestionFactory(exercise=exercise, answer='correct')
         ExerciseStateFactory(
             user=user, exercise=exercise, current_question=question, completed=False)
         result = user.check_answer('wrong')

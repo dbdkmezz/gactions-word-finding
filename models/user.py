@@ -130,12 +130,20 @@ class AnswerGiven(models.Model):
     answer = models.CharField(max_length=32)
 
     def correct(self):
+        """Checks if the answer given is one of the correct answers.
+        An answer counts as correct if any of the words in it are a correct answer.
+        """
         # Would be more efficient if answers were objects, then we wouldn't have to do a
         # string comparison here.
         # Alternatively, this bool could be part of the model, but that doesn't feel right.
-        return (
-            self.answer.lower()
-            in (a.lower() for a in Question.objects.get(pk=self.question.pk).answers))
+        correct_answers = list(
+            a.lower()
+            for a in Question.objects.get(pk=self.question.pk).answers
+        )
+
+        return any(
+            (word in correct_answers)
+            for word in self.answer.lower().split(' '))
 
 
 # class CueGiven(models.Model):
