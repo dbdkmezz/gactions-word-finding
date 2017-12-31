@@ -24,7 +24,7 @@ class TestViews(TestCase):
     def test_welcome_if_new_user(self):
         QuestionFactory(question="What's a pea?")
         response = _make_request_and_return_text()
-        self.assertIn('Welcome to word finding practice. ', response)
+        self.assertIn('Welcome. ', response)
         self.assertIn("the first question", response)
         self.assertNotIn("next question", response)
         self.assertIn(" What's a pea?", response)

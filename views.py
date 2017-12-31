@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 # v1
 # what happens if the user says nothing
+# intro text for each exercise
 #
 # v2
 # refactor index!
@@ -87,7 +88,10 @@ def index(request):
 
 
 def _welcome(user, responses):
-    responses.append("Welcome to word finding practice.")
+    responses.append((
+        "Welcome. You have been having trouble finding your words. "
+        "These exercises will give you a chance to practice your word finding."
+    ))
     user.start_new_exercise()
     return responses
 
