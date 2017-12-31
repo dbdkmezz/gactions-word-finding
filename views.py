@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 # v1
+# BUG: model answers include extra words if they were given by the user
+# BUG: if the user gets it wrong 3 times in a row the model answer is wrong
 # what happens if the user says nothing
 # intro text for each exercise
 #
